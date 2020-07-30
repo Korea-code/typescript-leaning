@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script defer src="roshambo.js"></script>
+    <style>
+      picture {
+        display: flex;
+      }
+      #computer {
+        width: 142px;
+        height: 220px;
+        background-position: 0 0;
+        text-align: center;
+      }
+      #me {
+        width: 142px;
+        height: 220px;
+        background-position: 0 0;
+        text-align: center;
+      }
+      #btns {
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <picture>
+      <div id="computer">
+        <img src="" alt="" />
+        <p>Computer</p>
+      </div>
+      <div id="me">
+        <img src="" alt="" />
+        <p>You</p>
+      </div>
+    </picture>
+    <h2 id="winCount"></h1>
+    <div id="btns">
+      <button id="rock" class="btn">ROCK</button>
+      <button id="scissor" class="btn">SCISSORS</button>
+      <button id="paper" class="btn">PAPER</button>
+    </div>
+  </body>
+</html>

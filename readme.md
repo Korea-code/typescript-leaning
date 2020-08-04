@@ -9,3 +9,5 @@ I will make some games with TS and HTML.
 2. Number Baseball
 3. Roshambo
 4. TS stone(Hearth Stone)
+5. card-match
+6. tic-tec-toe

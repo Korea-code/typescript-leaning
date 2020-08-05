@@ -4,6 +4,7 @@ class Card {
   protected _field: boolean;
   private _mine: boolean;
   private _hero: boolean;
+  private _attackable: boolean;
   constructor(mine: boolean, hero: boolean) {
     this._mine = mine;
     this._hero = hero;
@@ -11,10 +12,12 @@ class Card {
       this._power = Math.ceil(Math.random() * 2);
       this._hp = Math.ceil(Math.random() * 5) + 25;
       this._field = true;
+      this._attackable = true;
     } else {
       this._field = false;
       this._power = Math.ceil(Math.random() * 5);
       this._hp = Math.ceil(Math.random() * 5);
+      this._attackable = false;
     }
   }
   get power() {
@@ -33,11 +36,35 @@ class Card {
   get field() {
     return this._field;
   }
+  attacted(power: number) {
+    this._hp -= power;
+  }
+  attack(target: Card) {
+    this.attacted(target.power);
+    target.attacted(this.power);
+  }
+  // set attackable() {
+  //   this._attackable = ture;
+  // }
 }
 
 class Hero extends Card {
+  private _cost: { currentCost: number; totalCost: number } = {
+    currentCost: 1,
+    totalCost: 1,
+  };
   constructor(mine: boolean) {
     super(mine, true);
+  }
+  addOneCost() {
+    if (this._cost.totalCost < 10)
+      this._cost.currentCost = ++this._cost.totalCost;
+  }
+  get cost() {
+    return this._cost;
+  }
+  useCost(usedCost: number) {
+    this._cost.currentCost -= usedCost;
   }
 }
 class Sub extends Card {
@@ -54,21 +81,20 @@ class Sub extends Card {
   }
 }
 function isSub(card: Card): card is Sub {
-  if (!card.hero) return true;
-  return false;
+  return !card.hero;
 }
 function isHero(card: Card): card is Hero {
-    if (card.hero) return true;
-    return false;
-  }
+  return card.hero;
+}
 
 interface Player {
   deck: HTMLDivElement;
   hero: HTMLDivElement;
   field: HTMLDivElement;
-  cost: HTMLDivElement;
-  deckData: Card[];
-  heroData: Card | null;
+  total_cost: HTMLDivElement;
+  current_cost: HTMLDivElement;
+  deckData: Sub[];
+  heroData: Hero | null;
   fieldData: Card[];
   chosenCard: HTMLDivElement | null;
   chosenCardData: Card[] | null;
@@ -78,7 +104,8 @@ const opponent: Player = {
   deck: document.getElementById("rival-deck") as HTMLDivElement,
   hero: document.getElementById("rival-hero") as HTMLDivElement,
   field: document.getElementById("rival-cards") as HTMLDivElement,
-  cost: document.getElementById("rival-cost") as HTMLDivElement,
+  total_cost: document.getElementById("rival-total-cost") as HTMLDivElement,
+  current_cost: document.getElementById("rival-current-cost") as HTMLDivElement,
   deckData: [],
   heroData: null,
   fieldData: [],
@@ -89,16 +116,16 @@ const me: Player = {
   deck: document.getElementById("my-deck") as HTMLDivElement,
   hero: document.getElementById("my-hero") as HTMLDivElement,
   field: document.getElementById("my-cards") as HTMLDivElement,
-  cost: document.getElementById("my-cost") as HTMLDivElement,
+  total_cost: document.getElementById("my-total-cost") as HTMLDivElement,
+  current_cost: document.getElementById("my-current-cost") as HTMLDivElement,
   deckData: [],
   heroData: null,
   fieldData: [],
   chosenCard: null,
   chosenCardData: null,
 };
-
-const turnBtn = document.getElementById("turn-btn") as HTMLButtonElement;
-let turn = true;
+const starter = Math.floor(Math.random() * 2) === 0 ? true : false;
+let turn = starter;
 
 function init() {
   [opponent, me].forEach((hero) => {
@@ -110,8 +137,8 @@ function init() {
   });
   createHero({ mine: true });
   createHero({ mine: false });
-  createDeck({ mine: true, count: 5 });
-  createDeck({ mine: false, count: 5 });
+  createDeck({ mine: true, count: 4 });
+  createDeck({ mine: false, count: 4 });
   redrawScreen({ mine: true });
   redrawScreen({ mine: false });
 }
@@ -140,7 +167,7 @@ const connectCardDOM = ({
   const cardEl = document
     .querySelector(".card-hidden .card")!
     .cloneNode(true) as HTMLDivElement;
-  cardEl.querySelector(".card-att")!.textContent = data.power.toString();
+  cardEl.querySelector(".card-power")!.textContent = data.power.toString();
   cardEl.querySelector(".card-hp")!.textContent = data.hp.toString();
   if (hero) {
     (cardEl.querySelector(".card-cost") as HTMLDivElement).style.display =
@@ -148,14 +175,12 @@ const connectCardDOM = ({
     const name = document.createElement("div");
     name.textContent = "Hero";
     cardEl.appendChild(name);
-  } else {
-    cardEl.querySelector(
-      ".card-cost",
-    )!.textContent = (data as Sub).cost.toString();
+  } else if (isSub(data)) {
+    cardEl.querySelector(".card-cost")!.textContent = data.cost.toString();
   }
   cardEl.addEventListener("click", () => {
-    if (!data.hero && data.mine && !data.field) {
-      deckToField({ data: data as Sub });
+    if (isSub(data) && data.mine === turn && !data.field) {
+      deckToField({ data });
     }
   });
   DOM.appendChild(cardEl);
@@ -164,7 +189,17 @@ const connectCardDOM = ({
 const redrawScreen = ({ mine }: { mine: boolean }) => {
   const player = mine ? me : opponent;
   redrawHero(player);
+  drawTurn(turn);
 };
+function drawTurn(turn: boolean) {
+  if (turn) {
+    document.querySelector("#rival")!.classList.remove("turn");
+    document.querySelector("#my")!.classList.add("turn");
+  } else {
+    document.querySelector("#my")!.classList.remove("turn");
+    document.querySelector("#rival")!.classList.add("turn");
+  }
+}
 const redrawHero = (target: Player) => {
   target.hero.innerHTML = "";
   connectCardDOM({
@@ -197,7 +232,7 @@ const redrawField = (target: Player) => {
 
 const deckToField = ({ data }: { data: Sub }): boolean => {
   const target = turn ? me : opponent;
-  const currentCost = Number(target.cost.textContent);
+  const currentCost = target.heroData!.cost.currentCost;
   if (currentCost < data.cost!) {
     alert("Cost is not enough");
     return true;
@@ -208,8 +243,31 @@ const deckToField = ({ data }: { data: Sub }): boolean => {
   target.fieldData.push(data);
   redrawDeck(target);
   redrawField(target);
-  target.cost.textContent = String(currentCost - data!.cost);
+  target.current_cost.textContent = String(currentCost - data!.cost);
+  target.heroData!.useCost(data!.cost);
   return false;
 };
+const redrawCost = ({ mine }: { mine: boolean }) => {
+  const target = mine ? me : opponent;
+  target.total_cost.textContent = target.heroData!.cost.totalCost.toString();
+  target.current_cost.textContent = target.heroData!.cost.totalCost.toString();
+};
+
+const turnBtn = document.getElementById("turn-btn") as HTMLButtonElement;
+
+function nextTurn() {
+  turn = !turn;
+  drawTurn(turn);
+  if (turn === starter) {
+    [me, opponent].forEach((player) => {
+      player.heroData!.addOneCost();
+    });
+  }
+  redrawScreen({ mine: true });
+  redrawScreen({ mine: false });
+  redrawCost({ mine: turn });
+  createDeck({ mine: turn, count: 1 });
+}
+turnBtn.addEventListener("click", nextTurn);
 
 init();

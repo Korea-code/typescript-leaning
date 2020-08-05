@@ -4,126 +4,50 @@
     <meta charset="utf-8" />
     <title>TS Stone</title>
     <script defer src="ts_stone.js"></script>
-    <style>
-      #my,
-      #rival {
-        display: inline-block;
-        vertical-align: top;
-        margin-right: 50px;
-        min-width: 500px;
-      }
-      .turn {
-        border: 1px solid blue;
-      }
-      #rival {
-        vertical-align: bottom;
-      }
-      #my-deck,
-      #rival-deck {
-        display: inline-block;
-        vertical-align: top;
-        width: 300px;
-        background: silver;
-      }
-      #rival-deck,
-      #rival-hero,
-      #rival-cards,
-      #my-cards,
-      #my-deck,
-      #my-hero {
-        text-align: center;
-      }
-      .card {
-        width: 75px;
-        height: 120px;
-        display: inline-block;
-        position: relative;
-        border: 1px solid black;
-        margin-bottom: 10px;
-        background: white;
-        user-select: none;
-      }
-      .card-name {
-        text-align: center;
-        font-size: 14px;
-      }
-      .card-att,
-      .card-hp,
-      .card-cost {
-        font-size: 16px;
-        font-weight: bold;
-        text-align: center;
-        line-height: 30px;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: inline-block;
-        position: absolute;
-        bottom: 0;
-        border: 1px solid black;
-      }
-      .card-cost {
-        bottom: auto;
-        top: 0;
-        left: 0;
-        background-color: blue;
-        color: white;
-      }
-      .card-att {
-        left: 0;
-        background-color: yellow;
-      }
-      .card-hp {
-        right: 0;
-        background-color: red;
-        color: white;
-      }
-      .card-hidden {
-        display: none;
-      }
-      .card-selected {
-        border: 2px solid red;
-      }
-      .card-turnover {
-        background: gray;
-      }
-      #turn-btn {
-        float: right;
-        position: relative;
-        top: -23px;
-      }
-    </style>
+    <link rel="stylesheet" href="ts_stone.css" />
   </head>
   <body>
-    <div id="rival">
-      <div>Cost: <span id="rival-cost">10</span>/<span>10</span></div>
-      <div id="rival-hero"></div>
-      <div id="rival-cards" style="height: 150px;"></div>
-    </div>
-    <div id="rival-deck">
-      <div>Deck</div>
-    </div>
-    <hr />
-    <button id="turn-btn">Pass</button>
-    <div id="my" class="turn">
-      <div id="my-cards" style="height: 150px;"></div>
-      <div id="my-hero"></div>
-      <div>Cost: <span id="my-cost">10</span>/<span>10</span></div>
-    </div>
-    <div id="my-deck">
-      <div>Deck</div>
-    </div>
-    <div class="card-hidden">
-      <div class="card">
-        <div class="card-cost"></div>
-        <div class="card-att"></div>
-        <div class="card-hp"></div>
+    <div class="wrapper">
+      <div id="rival-deck">
+        <div>Deck</div>
       </div>
-    </div>
-    <div>
-      Red: Health Point | Yellow: Power | Cost: blue<br />
-      You can win the game when opponent's health point get zero. You can use
-      your cards within your costs.
+      <div id="rival">
+        <div>
+          Cost: <span id="rival-current-cost">1</span>/<span
+            id="rival-total-cost"
+            >1</span
+          >
+        </div>
+        <div id="rival-hero"></div>
+        <div id="rival-cards" style="height: 150px;"></div>
+      </div>
+
+      <hr />
+      <button id="turn-btn">Pass</button>
+      <div id="my">
+        <div id="my-cards" style="height: 150px;"></div>
+        <div id="my-hero"></div>
+        <div>
+          Cost: <span id="my-current-cost">1</span>/<span id="my-total-cost"
+            >1</span
+          >
+        </div>
+      </div>
+      <div id="my-deck">
+        <div>Deck</div>
+      </div>
+      <div class="card-hidden">
+        <div class="card">
+          <div class="card-cost"></div>
+          <div class="card-power"></div>
+          <div class="card-hp"></div>
+        </div>
+      </div>
+      <div>
+        Red: Health Point | Yellow: Power | Cost: blue<br />
+        You can win the game when opponent's health point get zero. You can use
+        your cards within your costs.
+      </div>
     </div>
   </body>
 </html>

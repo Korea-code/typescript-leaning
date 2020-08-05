@@ -34,13 +34,13 @@ class Card {
     get attackable() {
         return this._attackable;
     }
-    attacted(power) {
+    attacked(power) {
         this._hp -= power;
     }
     attack(target) {
         if (this._attackable) {
-            this.attacted(target.power);
-            target.attacted(this.power);
+            this.attacked(target.power);
+            target.attacked(this.power);
             this._attackable = false;
         }
     }
@@ -152,15 +152,18 @@ const createDeck = ({ player, count }) => {
 const createHero = ({ mine }) => {
     const player = mine ? me : opponent;
     player.heroData = new Hero(mine);
-    connectCardDOM({ data: player.heroData, DOM: player.hero, hero: true });
+    connectCardDOM({ data: player.heroData, DOM: player.hero });
 };
-const connectCardDOM = ({ data, DOM, hero = false, }) => {
+const connectCardDOM = ({ data, DOM }) => {
     const cardEl = document
         .querySelector(".card-hidden .card")
         .cloneNode(true);
     cardEl.querySelector(".card-power").textContent = data.power.toString();
     cardEl.querySelector(".card-hp").textContent = data.hp.toString();
-    if (hero) {
+    if (data.attackable && data.mine === turn) {
+        cardEl.classList.add("card-attackable");
+    }
+    if (data.hero) {
         cardEl.querySelector(".card-cost").style.display =
             "none";
         const name = document.createElement("div");
@@ -172,6 +175,7 @@ const connectCardDOM = ({ data, DOM, hero = false, }) => {
     }
     cardEl.addEventListener("click", () => {
         if (isSub(data) && data.mine === turn && !data.field) {
+            initSelectedCard();
             deckToField({ data });
         }
         else if (data.mine === turn && data.attackable && data.field) {
@@ -225,7 +229,6 @@ const redrawHero = (target) => {
     connectCardDOM({
         data: target.heroData,
         DOM: target.hero,
-        hero: true,
     });
 };
 const redrawDeck = (target) => {
@@ -234,7 +237,6 @@ const redrawDeck = (target) => {
         connectCardDOM({
             data,
             DOM: target.deck,
-            hero: false,
         });
     });
 };
@@ -245,7 +247,6 @@ const redrawField = (target) => {
         connectCardDOM({
             data,
             DOM: target.field,
-            hero: false,
         });
     });
 };
@@ -280,18 +281,20 @@ function nextTurn() {
             player.heroData.addOneCost();
         });
     }
+    newTurn();
+    redrawField(me);
+    redrawField(opponent);
     redrawScreen({ mine: true });
     redrawScreen({ mine: false });
     redrawCost({ mine: turn });
-    newTurn();
 }
 function newTurn() {
     const target = turn ? me : opponent;
-    drawCard(target);
     target.fieldData.forEach((card) => {
         card.allowAttack();
     });
     target.heroData.allowAttack();
+    drawCard(target);
     initSelectedCard();
 }
 function drawCard(player) {

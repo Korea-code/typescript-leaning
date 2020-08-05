@@ -81,9 +81,13 @@
 .card-hidden {
   display: none;
 }
+.card-attackable {
+  border: 2px solid green;
+}
 .card-selected {
   border: 2px solid red;
 }
+
 .card-turnover {
   background: gray;
 }

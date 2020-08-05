@@ -31,12 +31,21 @@ class Card {
     get field() {
         return this._field;
     }
+    get attackable() {
+        return this._attackable;
+    }
     attacted(power) {
         this._hp -= power;
     }
     attack(target) {
-        this.attacted(target.power);
-        target.attacted(this.power);
+        if (this._attackable) {
+            this.attacted(target.power);
+            target.attacted(this.power);
+            this._attackable = false;
+        }
+    }
+    allowAttack() {
+        this._attackable = true;
     }
 }
 class Hero extends Card {
@@ -102,6 +111,24 @@ const me = {
 };
 const starter = Math.floor(Math.random() * 2) === 0 ? true : false;
 let turn = starter;
+const selectedCard = {
+    isSelected: false,
+    cardElement: null,
+    cardData: null,
+};
+function initSelectedCard() {
+    selectedCard.isSelected = false;
+    if (selectedCard.cardElement)
+        selectedCard.cardElement.classList.remove("card-selected");
+    selectedCard.cardElement = null;
+    selectedCard.cardData = null;
+}
+function selectCard({ div, data }) {
+    selectedCard.isSelected = true;
+    selectedCard.cardElement = div;
+    selectedCard.cardData = data;
+    div.classList.add("card-selected");
+}
 function init() {
     [opponent, me].forEach((hero) => {
         hero.deckData = [];
@@ -109,18 +136,16 @@ function init() {
         hero.fieldData = [];
         hero.chosenCard = null;
         hero.chosenCardData = null;
+        createDeck({ player: hero, count: 4 });
     });
     createHero({ mine: true });
     createHero({ mine: false });
-    createDeck({ mine: true, count: 4 });
-    createDeck({ mine: false, count: 4 });
     redrawScreen({ mine: true });
     redrawScreen({ mine: false });
 }
-const createDeck = ({ mine, count }) => {
-    const player = mine ? me : opponent;
+const createDeck = ({ player, count }) => {
     for (let i = 0; i < count; ++i) {
-        player.deckData.push(new Sub(mine));
+        player.deckData.push(new Sub(player === me ? true : false));
     }
     redrawDeck(player);
 };
@@ -149,8 +174,36 @@ const connectCardDOM = ({ data, DOM, hero = false, }) => {
         if (isSub(data) && data.mine === turn && !data.field) {
             deckToField({ data });
         }
+        else if (data.mine === turn && data.attackable && data.field) {
+            if (selectedCard.isSelected && selectedCard.cardElement === cardEl) {
+                initSelectedCard();
+            }
+            else if (selectedCard.isSelected) {
+                initSelectedCard();
+                selectCard({ div: cardEl, data });
+            }
+            else {
+                selectCard({ div: cardEl, data });
+            }
+        }
+        else if (data.mine === !turn && data.field && selectedCard.isSelected) {
+            selectedCard.cardData.attack(data);
+            checkField({ player: me });
+            checkField({ player: opponent });
+            redrawField(me);
+            redrawField(opponent);
+            redrawHero(me);
+            redrawHero(opponent);
+        }
     });
     DOM.appendChild(cardEl);
+};
+const checkField = ({ player }) => {
+    for (let i = 0; i < player.fieldData.length; ++i) {
+        if (player.fieldData[i].hp <= 0) {
+            player.fieldData.splice(i, 1);
+        }
+    }
 };
 const redrawScreen = ({ mine }) => {
     const player = mine ? me : opponent;
@@ -187,6 +240,7 @@ const redrawDeck = (target) => {
 };
 const redrawField = (target) => {
     target.field.innerHTML = "";
+    initSelectedCard();
     target.fieldData.forEach((data) => {
         connectCardDOM({
             data,
@@ -229,7 +283,29 @@ function nextTurn() {
     redrawScreen({ mine: true });
     redrawScreen({ mine: false });
     redrawCost({ mine: turn });
-    createDeck({ mine: turn, count: 1 });
+    newTurn();
+}
+function newTurn() {
+    const target = turn ? me : opponent;
+    drawCard(target);
+    target.fieldData.forEach((card) => {
+        card.allowAttack();
+    });
+    target.heroData.allowAttack();
+    initSelectedCard();
+}
+function drawCard(player) {
+    createDeck({ player, count: 1 });
+    if (player.deckData.length > 10) {
+        setTimeout(() => {
+            alert("Too many cards.");
+            player.deckData.pop();
+            redrawDeck(player);
+        }, 200);
+    }
+    else {
+        redrawDeck(player);
+    }
 }
 turnBtn.addEventListener("click", nextTurn);
 init();
